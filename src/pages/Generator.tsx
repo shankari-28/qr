@@ -5,8 +5,7 @@ import {
   Globe, Type, User, Image, Share2, Smartphone, Video,
   Palette, Square, Pipette, Upload, ShieldCheck, Download,
 } from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import DashboardLayout from "@/components/DashboardLayout";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 

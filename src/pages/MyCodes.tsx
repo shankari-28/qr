@@ -1,18 +1,9 @@
 import { motion } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
-import {
-  LayoutDashboard, FolderOpen, BarChart3, Plus,
-  Download, Trash2, BarChart, Pencil, QrCode
-} from "lucide-react";
-import Header from "@/components/Header";
+import { Link } from "react-router-dom";
+import { Plus, Download, Trash2, BarChart, Pencil, QrCode } from "lucide-react";
+import DashboardLayout from "@/components/DashboardLayout";
 
 const ease = [0.16, 1, 0.3, 1] as const;
-
-const sidebarLinks = [
-  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-  { label: "My QR Codes", to: "/dashboard/codes", icon: FolderOpen },
-  { label: "Analytics", to: "/dashboard/analytics", icon: BarChart3 },
-];
 
 const codes = [
   { name: "Product Launch Campaign", type: "URL", scans: 3421, created: "Mar 12, 2026", status: "active", url: "https://launch.acme.com" },
@@ -24,80 +15,57 @@ const codes = [
 ];
 
 export default function MyCodes() {
-  const location = useLocation();
-
   return (
-    <div className="min-h-screen">
-      <Header />
-      <div className="flex pt-16">
-        <aside className="hidden lg:flex flex-col w-[280px] border-r border-border p-6 min-h-[calc(100vh-4rem)] bg-card">
-          <nav className="space-y-1 flex-1">
-            {sidebarLinks.map((l) => (
-              <Link key={l.to} to={l.to}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  location.pathname === l.to ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                }`}>
-                <l.icon className="w-4 h-4" />{l.label}
-              </Link>
-            ))}
-          </nav>
-          <Link to="/generator" className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 btn-press">
-            <Plus className="w-4 h-4" /> New QR Code
+    <DashboardLayout>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }}>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-semibold mb-1">My QR Codes</h1>
+            <p className="text-sm text-muted-foreground">{codes.length} codes total</p>
+          </div>
+          <Link to="/generator" className="inline-flex items-center gap-2 bg-foreground text-background px-5 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 btn-press">
+            <Plus className="w-4 h-4" /> Create QR
           </Link>
-        </aside>
+        </div>
 
-        <main className="flex-1 p-6 lg:p-10">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }}>
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h1 className="text-2xl font-semibold mb-1">My QR Codes</h1>
-                <p className="text-sm text-muted-foreground">{codes.length} codes total</p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {codes.map((c, i) => (
+            <motion.div
+              key={c.name}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease, delay: i * 0.06 }}
+              className="bg-card border border-border rounded-xl p-5 hover-lift group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
+                  <QrCode className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full ${
+                  c.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${c.status === "active" ? "bg-success" : "bg-muted-foreground"}`} />
+                  {c.status}
+                </span>
               </div>
-              <Link to="/generator" className="inline-flex items-center gap-2 bg-foreground text-background px-5 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 btn-press">
-                <Plus className="w-4 h-4" /> Create QR
-              </Link>
-            </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {codes.map((c, i) => (
-                <motion.div
-                  key={c.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, ease, delay: i * 0.06 }}
-                  className="bg-card border border-border rounded-xl p-5 hover-lift group"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
-                      <QrCode className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full ${
-                      c.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${c.status === "active" ? "bg-success" : "bg-muted-foreground"}`} />
-                      {c.status}
-                    </span>
-                  </div>
+              <h3 className="font-semibold text-sm mb-1 truncate">{c.name}</h3>
+              <p className="text-xs text-muted-foreground font-mono mb-1">{c.type} · {c.url}</p>
+              <p className="text-xs text-muted-foreground mb-4">{c.created}</p>
 
-                  <h3 className="font-semibold text-sm mb-1 truncate">{c.name}</h3>
-                  <p className="text-xs text-muted-foreground font-mono mb-1">{c.type} · {c.url}</p>
-                  <p className="text-xs text-muted-foreground mb-4">{c.created}</p>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold tabular-nums">{c.scans.toLocaleString()} scans</span>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-1.5 rounded-md hover:bg-accent transition-colors" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
-                      <button className="p-1.5 rounded-md hover:bg-accent transition-colors" title="Download"><Download className="w-3.5 h-3.5" /></button>
-                      <button className="p-1.5 rounded-md hover:bg-accent transition-colors" title="Analytics"><BarChart className="w-3.5 h-3.5" /></button>
-                      <button className="p-1.5 rounded-md hover:bg-destructive/10 text-destructive transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </main>
-      </div>
-    </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold tabular-nums">{c.scans.toLocaleString()} scans</span>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button className="p-1.5 rounded-md hover:bg-accent transition-colors" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+                  <button className="p-1.5 rounded-md hover:bg-accent transition-colors" title="Download"><Download className="w-3.5 h-3.5" /></button>
+                  <button className="p-1.5 rounded-md hover:bg-accent transition-colors" title="Analytics"><BarChart className="w-3.5 h-3.5" /></button>
+                  <button className="p-1.5 rounded-md hover:bg-destructive/10 text-destructive transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+    </DashboardLayout>
   );
 }
