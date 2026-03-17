@@ -1,7 +1,5 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { QRCodeSVG } from "qrcode.react";
-import { useState } from "react";
 import {
   ArrowRight, BarChart3, Palette, Globe, Zap,
   Link as LinkIcon, ScanLine, Download, Check
