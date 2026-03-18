@@ -16,6 +16,7 @@ import {
 import { NavLink } from "@/components/NavLink";
 
 const sidebarLinks = [
+  { label: "Home", to: "/", icon: Home },
   { label: "Profile", to: "/dashboard/profile", icon: User },
   { label: "QR Generator", to: "/dashboard/qr-generator", icon: QrCode },
   { label: "Analytics", to: "/dashboard/analytics", icon: BarChart3 },
