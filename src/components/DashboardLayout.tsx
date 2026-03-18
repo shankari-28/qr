@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { QrCode, BarChart3, FolderOpen, User } from "lucide-react";
+import { QrCode, BarChart3, User } from "lucide-react";
 import Header from "@/components/Header";
 
 const sidebarLinks = [

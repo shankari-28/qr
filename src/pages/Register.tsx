@@ -54,7 +54,7 @@ export default function Register() {
                   className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow" />
               </div>
             </div>
-            <Link to="/dashboard">
+            <Link to="/dashboard/profile">
               <button type="button" className="w-full bg-foreground text-background py-3 rounded-lg font-medium hover:opacity-90 btn-press mt-2">
                 Create Account
               </button>
