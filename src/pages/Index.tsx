@@ -27,7 +27,7 @@ function HeroSection() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
-              to="/generator"
+              to="/dashboard/qr-generator"
               className="inline-flex items-center justify-center gap-2 bg-foreground text-background px-6 py-3 rounded-lg font-medium hover:opacity-90 btn-press"
             >
               Get Started <ArrowRight className="w-4 h-4" />
@@ -237,7 +237,7 @@ function CTASection() {
             Join thousands of teams using ScanovaX to bridge physical and digital experiences.
           </p>
           <Link
-            to="/generator"
+            to="/dashboard/qr-generator"
             className="inline-flex items-center gap-2 bg-foreground text-background px-8 py-3.5 rounded-lg font-medium hover:opacity-90 btn-press text-base"
           >
             Create Your First QR <ArrowRight className="w-4 h-4" />
