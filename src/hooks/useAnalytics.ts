@@ -57,14 +57,11 @@ export function useScanStats(qrId?: string) {
         .select("id, device_type, country, user_identifier")
         .in("qr_code_id", ids) as unknown as { data: { id: string, device_type: string | null, country: string | null, user_identifier: string | null }[] | null };
 
-      const totalFromEvents = events?.length ?? 0;
-      
-      // Use the actual total from qr_codes table for the card display
-      const total = totalScansValue;
-      
-      // Unique Scans: Distinct user_identifier from events
-      const uniqueDocs = new Set(events?.map(e => e.user_identifier)).size;
-      const unique = uniqueDocs;
+      // Total scans should count all events, including repeated scans from same user
+      const total = events?.length ?? 0;
+
+      // Unique scans: count distinct user_identifier (user/session identifier)
+      const unique = new Set(events?.map(e => e.user_identifier ?? "anonymous")).size;
 
       const desktop = events?.filter((e) => e.device_type === "desktop").length ?? 0;
       const mobile = events?.filter((e) => e.device_type === "mobile").length ?? 0;
