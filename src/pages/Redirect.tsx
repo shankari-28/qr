@@ -54,8 +54,8 @@ export default function Redirect() {
             const lastScanTime = localStorage.getItem(storageKey);
             const now = Date.now();
 
-            if (lastScanTime && (now - parseInt(lastScanTime)) < 10000) {
-              console.log("Recently scanned (within 10s), skip analytics increment.");
+            if (lastScanTime && (now - parseInt(lastScanTime)) < 60000) {
+              console.log("Recently scanned (within 60s), skip analytics increment.");
             } else {
               localStorage.setItem(storageKey, now.toString());
               
