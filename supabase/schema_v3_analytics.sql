@@ -66,3 +66,8 @@ begin
   );
 end;
 $$;
+
+-- 5. Add public select policy for QR codes (needed for redirection)
+drop policy if exists "qr_codes: select public" on public.qr_codes;
+create policy "qr_codes: select public" on public.qr_codes
+  for select using (status = 'active');
