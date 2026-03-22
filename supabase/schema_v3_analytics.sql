@@ -68,6 +68,7 @@ end;
 $$;
 
 -- 5. Add public select policy for QR codes (needed for redirection)
+-- This allows the public redirect page to find the destination of ANY QR code by its ID.
 drop policy if exists "qr_codes: select public" on public.qr_codes;
 create policy "qr_codes: select public" on public.qr_codes
-  for select using (status = 'active');
+  for select using (true);

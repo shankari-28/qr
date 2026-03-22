@@ -16,13 +16,21 @@ export default function Redirect() {
 
       try {
         // 1. Fetch QR code destination
+        console.log("Fetching QR data for ID:", qrId);
         const { data, error: qrError } = await supabase
           .from("qr_codes")
-          .select("content, type, user_id")
+          .select("content, type, user_id, status")
           .eq("id", qrId)
-          .single();
+          .maybeSingle();
+
+        if (qrError) {
+          console.error("Supabase Query Error:", qrError);
+          setError(`Database Error: ${qrError.message}`);
+          return;
+        }
 
         const qrData = data as any;
+        console.log("Retrieved QR Data:", qrData);
 
         if (qrError || !qrData) {
           setError("QR code not found or has been deleted.");
