@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
@@ -6,9 +6,13 @@ import { Loader2 } from "lucide-react";
 export default function Redirect() {
   const { qrId } = useParams();
   const [error, setError] = useState<string | null>(null);
+  const processed = useRef(false);
 
   useEffect(() => {
     async function processRedirect() {
+      if (!qrId || processed.current) return;
+      processed.current = true;
+
       if (!qrId) {
         setError("Invalid QR Code Link");
         return;
