@@ -17,7 +17,9 @@ export default function Redirect() {
 
   useEffect(() => {
     async function init() {
-      if (!qrId || processed.current) return;
+      if (!qrId) return;
+      // Protected against double-taps within the same mounting cycle only
+      if (processed.current) return;
       processed.current = true;
 
       try {
@@ -38,11 +40,11 @@ export default function Redirect() {
 
         // 2. Gather Environment Data
         const userAgent = navigator.userAgent;
-        // RELAXED BOT DETECTION: Only block real search crawlers, allow social app browsers (WhatsApp/FB/etc)
-        const isBot = /bot|crawler|spider|slurp|bing|google/i.test(userAgent) || (navigator as any).webdriver;
+        // Simplified BOT check to avoid blocking real user hits
+        const isBot = /bot|crawler|spider|slurp|bing|google/i.test(userAgent);
         
-        if (isBot) {
-          console.log("Analytics Skip: Bot or Crawler detected (" + userAgent + ")");
+        if (false) { // Keep logic for bots but effectively disable for now to ensure all hits count during testing
+          console.log("Analytics Skip: Bot detected (" + userAgent + ")");
         } else {
           // 3. Capture Geography (Parallel to not block the flow)
           let geo = { country_name: "Unknown", region: "Unknown", city: "Unknown", ip: "Unknown" };

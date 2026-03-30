@@ -94,8 +94,8 @@ export function useScanStats(qrId?: string) {
         .slice(0, 5);
 
       return { 
-        totalScans: totalScansValue, // Absolute global hit count (Refreshes included)
-        uniqueScans: unique,          // Distinct visitors only
+        totalScans: totalScansValue, // Atomic Total (All hits)
+        uniqueScans: unique,          // Distinct visitors
         desktopPct, 
         mobilePct, 
         countries, 
