@@ -26,6 +26,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -465,7 +466,7 @@ export default function Generator() {
           const matched = corrections.find(c => c.startsWith(existing.ec_level!));
           if (matched) setErrorLevel(matched);
         }
-        setLeadCaptureEnabled(!!existing.lead_capture_enabled);
+        setLeadCaptureEnabled(!!(existing as any).lead_capture_enabled);
         trackingIdRef.current = existing.id as any;
       }
     }
@@ -1216,6 +1217,9 @@ export default function Generator() {
                        <Palette className="w-6 h-6 text-primary" />
                        Customize Your QR Code
                     </DialogTitle>
+                    <DialogDescription className="sr-only">
+                      Adjust colors, shapes, and logos to customize your dynamic QR code.
+                    </DialogDescription>
                   </DialogHeader>
 
                   <Tabs defaultValue="dot-style" className="w-full mt-4">
