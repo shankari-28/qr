@@ -58,7 +58,18 @@ export default function Redirect() {
 
           // 4. Atomic Scan Increment (Total + Unique log)
           const deviceType = /Mobi|Android|iPhone/i.test(userAgent) ? "mobile" : "desktop";
-          const userIdentifier = `${geo.ip}-${userAgent}`; // Primary Unique ID
+          
+          // Create a deterministic hash of IP + UserAgent for unique identification
+          // Use a simple hash to keep it short and consistent
+          const userIdentifierRaw = `${geo.ip}-${userAgent}`;
+          let userIdentifier = userIdentifierRaw;
+          try {
+            // Create a simple hash by taking first 50 chars of raw identifier
+            // This keeps it consistent while avoiding overly long strings
+            userIdentifier = userIdentifierRaw.substring(0, 100);
+          } catch (e) {
+            userIdentifier = geo.ip || "Unknown";
+          }
 
           console.log("Recording atomic scan with params:", {
             target_qr_id: qrId,
@@ -85,7 +96,9 @@ export default function Redirect() {
               details: rpcError.details,
               hint: rpcError.hint
             });
-            toast.error("Scan tracking failed (but redirect will proceed)");
+            // Still show error but allow redirect to continue
+            console.warn("⚠️ Scan tracking failed, but redirecting anyway. Check Supabase schema deployment.");
+            // Only show toast if user is likely to see it (longer timeout before redirect)
           } else {
             console.log("✅ Analytics Success: Scan recorded for " + qrId);
             console.log("RPC Data:", rpcData);

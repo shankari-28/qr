@@ -137,30 +137,50 @@ returns void
 language plpgsql
 security definer
 as $$
+declare
+  v_user_id uuid;
 begin
+  -- Ensure parameters are not too long to avoid column constraint issues
+  -- Truncate user_identifier if it exceeds reasonable length
+  if length(COALESCE(user_identifier, '')) > 255 then
+    user_identifier := substring(user_identifier, 1, 255);
+  end if;
+  
+  if length(COALESCE(ip_address, '')) > 255 then
+    ip_address := substring(ip_address, 1, 255);
+  end if;
+
   -- DEDUPLICATION: Prevent duplicate scans from same user within 5 seconds
   -- Handles React Strict Mode, double-clicks, client retries, etc.
   if exists (
     select 1 from public.scan_events 
     where qr_code_id = target_qr_id 
-    and user_identifier = increment_scan.user_identifier 
+    and COALESCE(user_identifier, 'Anonymous') = COALESCE(increment_scan.user_identifier, 'Anonymous')
     and scanned_at > now() - interval '5 seconds'
   ) then
     return;
   end if;
 
-  -- A. UPDATE ATOMIC COUNTERS (only if not a duplicate)
-  -- 1. Total scan counter
-  update public.qr_codes
-  set scan_count = coalesce(scan_count, 0) + 1
+  -- Get the user_id for the QR code
+  select qr_codes.user_id into v_user_id 
+  from public.qr_codes 
   where id = target_qr_id;
+  
+  -- Only proceed if QR code exists
+  if v_user_id is not null then
+    -- A. UPDATE ATOMIC COUNTERS (only if not a duplicate)
+    -- 1. Total scan counter
+    update public.qr_codes
+    set scan_count = coalesce(scan_count, 0) + 1
+    where id = target_qr_id;
 
-  -- 2. Monthly scan counter for the user
-  update public.profiles 
-  set monthly_scan_count = coalesce(monthly_scan_count, 0) + 1 
-  where id = (select user_id from public.qr_codes where id = target_qr_id);
+    -- 2. Monthly scan counter for the user
+    update public.profiles 
+    set monthly_scan_count = coalesce(monthly_scan_count, 0) + 1 
+    where id = v_user_id;
+  end if;
 
-  -- B. LOG AUDIT EVENT
+  -- B. LOG AUDIT EVENT (always log, even if QR code doesn't exist)
   insert into public.scan_events (
     qr_code_id,
     scanner_email,
