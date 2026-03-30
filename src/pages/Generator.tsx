@@ -570,7 +570,7 @@ export default function Generator() {
       margin: 10, // Maintain mandatory Quiet Zone so scanners do not fail
       qrOptions: { errorCorrectionLevel: safeEcLevel.charAt(0) as ErrorCorrectionLevel },
       image: safeLogo,
-      imageOptions: { margin: 0, imageSize: 0.45 }
+      imageOptions: { margin: 10, imageSize: 0.3 }
     });
 
     forceSvgFill();
