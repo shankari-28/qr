@@ -401,14 +401,14 @@ export default function Generator() {
     convertToBase64().then(setBase64Logo);
   }, [logoFile]);
 
-  // Ensure proper formatting for direct scanning without redirect dependency
-  let qrValue = inputValue || " ";
+  // ─── Dynamic QR Tracking Logic ───
+  // Instead of encoding the target URL directly (static), 
+  // we encode a redirection link (dynamic) that hits our tracking component.
+  const currentTrackingId = editId || trackingIdRef.current;
+  const trackingUrl = `${window.location.origin}/r/${currentTrackingId}`;
   
-  // Enforce valid protocols to guarantee correct native scanner behaviour
-  const urlBasedTypes = ["url", "social", "app", "video", "maps", "review", "meet", "presentation"];
-  if (urlBasedTypes.includes(activeType) && qrValue !== " " && !/^https?:\/\//i.test(qrValue) && !/^[A-Za-z0-9]+:/i.test(qrValue)) {
-    qrValue = `https://${qrValue}`;
-  }
+  // This value is purely for internal formatting/native behavior fallbacks
+  let qrValue = trackingUrl; 
 
   // Content for the QR code if it were static (optional, but we use redirect now)
   const qrContent = inputValue;
@@ -562,15 +562,15 @@ export default function Generator() {
     const hideEyeBall = true;   // safeEyeBallType === "diamond" || safeEyeBallType === "star";
 
     qrCodeInstance.current.update({
-      data: qrValue || " ",
+      data: qrValue,
       dotsOptions,
       cornersSquareOptions: { color: "transparent", type: eyeFrameLibType },
       cornersDotOptions: { color: "transparent", type: eyeBallLibType },
       backgroundOptions: { color: "transparent" },
-      margin: 10, // Maintain mandatory Quiet Zone so scanners do not fail
+      margin: 20, // Increased Quiet Zone for better scan reliability on high-density dynamic URLs
       qrOptions: { errorCorrectionLevel: safeEcLevel.charAt(0) as ErrorCorrectionLevel },
       image: safeLogo,
-      imageOptions: { margin: 10, imageSize: 0.3 }
+      imageOptions: { margin: 10, imageSize: 0.25 } // Reduced logo size to 25% for 30% recovery headroom
     });
 
     forceSvgFill();

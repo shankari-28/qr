@@ -72,15 +72,15 @@ export function useScanStats(qrId?: string) {
       const total = totalScansValue;
 
       // Unique scans and breakdown stats come from the detailed scan_events log
-      // (Note: unique scans are always calculated from the events log over the available range)
-      const unique = new Set(events?.map(e => e.user_identifier ?? "anonymous")).size;
+      const unique = new Set(events?.filter(e => e.user_identifier).map(e => e.user_identifier) ?? []).size;
 
+      const eventCount = events?.length ?? 0;
       const desktop = events?.filter((e) => e.device_type === "desktop").length ?? 0;
       const mobile = events?.filter((e) => e.device_type === "mobile").length ?? 0;
-      const other = (events?.length ?? 0) - desktop - mobile;
+      const other = eventCount - desktop - mobile;
       
-      const desktopPct = (events?.length ?? 0) > 0 ? Math.round(((desktop + other * 0.4) / (events?.length ?? 1)) * 100) : 38;
-      const mobilePct = (events?.length ?? 0) > 0 ? 100 - desktopPct : 62;
+      const desktopPct = eventCount > 0 ? Math.round(((desktop + other * 0.4) / eventCount) * 100) : 38;
+      const mobilePct = eventCount > 0 ? 100 - desktopPct : 62;
 
       // Group by country
       const countryMap: Record<string, number> = {};
