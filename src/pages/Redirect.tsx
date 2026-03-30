@@ -38,11 +38,11 @@ export default function Redirect() {
 
         // 2. Gather Environment Data
         const userAgent = navigator.userAgent;
-        // ONLY block known search-engine bots, allow everything else (including headless browsers for testing)
-        const isBot = /bot|crawler|spider|slurp|bing|google/i.test(userAgent);
+        // RELAXED BOT DETECTION: Only block real search crawlers, allow social app browsers (WhatsApp/FB/etc)
+        const isBot = /bot|crawler|spider|slurp|bing|google/i.test(userAgent) || (navigator as any).webdriver;
         
         if (isBot) {
-          console.log("Analytics Skip: Bot detected (" + userAgent + ")");
+          console.log("Analytics Skip: Bot or Crawler detected (" + userAgent + ")");
         } else {
           // 3. Capture Geography (Parallel to not block the flow)
           let geo = { country_name: "Unknown", region: "Unknown", city: "Unknown", ip: "Unknown" };
@@ -72,6 +72,7 @@ export default function Redirect() {
 
           if (rpcError) {
             console.error("Analytics RPC Failure:", rpcError);
+            toast.error("Analytics synchronization failed: " + rpcError.message);
           } else {
             console.log("Analytics Success: Scan recorded for " + qrId);
           }
@@ -83,10 +84,10 @@ export default function Redirect() {
           setShowForm(true);
         } else {
           console.log("Standard Redirect: Proceeding to destination.");
-          // Wait slightly for any other hooks, then redirect
+          // Small delay for tracking to settle
           setTimeout(() => {
             performRedirect(qr);
-          }, 400);
+          }, 600);
         }
 
       } catch (err: any) {
