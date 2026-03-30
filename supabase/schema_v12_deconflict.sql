@@ -12,7 +12,7 @@ DROP TRIGGER IF EXISTS on_scan_event ON public.scan_events;
 DROP TRIGGER IF EXISTS sync_qr_counts ON public.scan_events;
 DROP TRIGGER IF EXISTS increment_scan_count ON public.scan_events;
 
--- 2. RE-ESTABLISH HIGH-FIDELITY RPC (One and Only Source)
+-- 2. RE-ESTABLISH HIGH-FIDELITY RPC WITH DEDUPLICATION
 CREATE OR REPLACE FUNCTION public.increment_scan(
   target_qr_id uuid,
   scanner_email text DEFAULT NULL,
@@ -28,7 +28,18 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-  -- A. UPDATE ATOMIC COUNTERS
+  -- DEDUPLICATION: Prevent duplicate scans from same user within 5 seconds
+  -- This handles React Strict Mode double-effects, double-clicks, client retries, etc.
+  IF EXISTS (
+    SELECT 1 FROM public.scan_events 
+    WHERE qr_code_id = target_qr_id 
+    AND user_identifier = increment_scan.user_identifier 
+    AND scanned_at > now() - interval '5 seconds'
+  ) THEN
+    RETURN;
+  END IF;
+
+  -- A. UPDATE ATOMIC COUNTERS (only if not a duplicate)
   -- 1. Total Global Counter
   UPDATE public.qr_codes
   SET scan_count = coalesce(scan_count, 0) + 1

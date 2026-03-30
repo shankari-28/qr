@@ -63,22 +63,29 @@ alter table public.qr_codes    enable row level security;
 alter table public.scan_events enable row level security;
 
 -- Profiles: own row only
+drop policy if exists "profiles: select own" on public.profiles;
 create policy "profiles: select own" on public.profiles
   for select using (auth.uid() = id);
+drop policy if exists "profiles: update own" on public.profiles;
 create policy "profiles: update own" on public.profiles
   for update using (auth.uid() = id);
 
 -- QR Codes: own rows only
+drop policy if exists "qr_codes: select own" on public.qr_codes;
 create policy "qr_codes: select own" on public.qr_codes
   for select using (auth.uid() = user_id);
+drop policy if exists "qr_codes: insert own" on public.qr_codes;
 create policy "qr_codes: insert own" on public.qr_codes
   for insert with check (auth.uid() = user_id);
+drop policy if exists "qr_codes: update own" on public.qr_codes;
 create policy "qr_codes: update own" on public.qr_codes
   for update using (auth.uid() = user_id);
+drop policy if exists "qr_codes: delete own" on public.qr_codes;
 create policy "qr_codes: delete own" on public.qr_codes
   for delete using (auth.uid() = user_id);
 
 -- Scan Events: readable by owner of the parent QR code
+drop policy if exists "scan_events: select own" on public.scan_events;
 create policy "scan_events: select own" on public.scan_events
   for select using (
     exists (
@@ -87,6 +94,7 @@ create policy "scan_events: select own" on public.scan_events
         and qr_codes.user_id = auth.uid()
     )
   );
+drop policy if exists "scan_events: insert anon" on public.scan_events;
 create policy "scan_events: insert anon" on public.scan_events
   for insert with check (true);
 
@@ -96,3 +104,87 @@ create policy "scan_events: insert anon" on public.scan_events
 create index if not exists qr_codes_user_id_idx    on public.qr_codes (user_id);
 create index if not exists scan_events_qr_code_idx on public.scan_events (qr_code_id);
 create index if not exists scan_events_scanned_at  on public.scan_events (scanned_at);
+
+-- ============================================================
+-- ANALYTICS: Additional columns and functions
+-- ============================================================
+
+-- Add missing columns for analytics if they don't exist
+alter table public.profiles add column if not exists monthly_scan_count bigint default 0;
+alter table public.scan_events add column if not exists scanner_email text;
+alter table public.scan_events add column if not exists state text;
+alter table public.scan_events add column if not exists city text;
+alter table public.scan_events add column if not exists ip_address text;
+alter table public.scan_events add column if not exists user_identifier text;
+
+-- ============================================================
+-- SCAN COUNTER FUNCTION WITH DEDUPLICATION
+-- ============================================================
+
+-- Increment scan count with 5-second deduplication window
+-- This prevents double-counting from React Strict Mode, double-clicks, retries, etc.
+create or replace function public.increment_scan(
+  target_qr_id uuid,
+  scanner_email text default null,
+  device_type text default 'desktop',
+  country text default 'Unknown',
+  state text default 'Unknown',
+  city text default 'Unknown',
+  ip_address text default 'Unknown',
+  user_identifier text default 'Anonymous'
+)
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  -- DEDUPLICATION: Prevent duplicate scans from same user within 5 seconds
+  -- Handles React Strict Mode, double-clicks, client retries, etc.
+  if exists (
+    select 1 from public.scan_events 
+    where qr_code_id = target_qr_id 
+    and user_identifier = increment_scan.user_identifier 
+    and scanned_at > now() - interval '5 seconds'
+  ) then
+    return;
+  end if;
+
+  -- A. UPDATE ATOMIC COUNTERS (only if not a duplicate)
+  -- 1. Total scan counter
+  update public.qr_codes
+  set scan_count = coalesce(scan_count, 0) + 1
+  where id = target_qr_id;
+
+  -- 2. Monthly scan counter for the user
+  update public.profiles 
+  set monthly_scan_count = coalesce(monthly_scan_count, 0) + 1 
+  where id = (select user_id from public.qr_codes where id = target_qr_id);
+
+  -- B. LOG AUDIT EVENT
+  insert into public.scan_events (
+    qr_code_id,
+    scanner_email,
+    device_type,
+    country,
+    state,
+    city,
+    ip_address,
+    user_identifier,
+    scanned_at
+  )
+  values (
+    target_qr_id,
+    scanner_email,
+    device_type,
+    country,
+    state,
+    city,
+    ip_address,
+    user_identifier,
+    now()
+  );
+end;
+$$;
+
+-- Grant permissions to call the function
+grant execute on function public.increment_scan to anon, authenticated;
