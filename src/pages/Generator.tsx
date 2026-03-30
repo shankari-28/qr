@@ -143,7 +143,7 @@ const preDesignTemplates = [
     // PNG ~440x535. White area: L=8% R=92% T=25% B=88%
     whitebox: { left: 0.08, right: 0.92, top: 0.25, bottom: 0.88 },
     safeZone: { cx: 0.5, cy: 0.58, size: 0.78 },
-    config: { fgColor: '#f97316', bodyType: 'rounded', eyeFrameType: 'hexagon-frame', eyeBallType: 'square', selectedShape: 'Coffee', colorMode: 'single', selectedFrame: 'None' }
+    config: { fgColor: '#f97316', bodyType: 'rounded', eyeFrameType: 'hexagon-frame', eyeBallType: 'square', selectedShape: 'Square', colorMode: 'single', selectedFrame: 'None' }
   },
   {
     id: 'review', src: '/pre_design/review.png', label: 'Rate Us',
@@ -597,6 +597,29 @@ export default function Generator() {
       }
       overlayGroup.innerHTML = "";
       
+      // Support for Gradients in Custom Shapes
+      if (useGradient) {
+        const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+        const lg = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+        lg.setAttribute("id", "custom-overlay-gradient");
+        lg.setAttribute("gradientTransform", `rotate(${gradientAngle}, 500, 500)`);
+        
+        const stop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+        stop1.setAttribute("offset", "0%");
+        stop1.setAttribute("stop-color", gradientColor1);
+        
+        const stop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+        stop2.setAttribute("offset", "100%");
+        stop2.setAttribute("stop-color", gradientColor2);
+        
+        lg.appendChild(stop1);
+        lg.appendChild(stop2);
+        defs.appendChild(lg);
+        overlayGroup.appendChild(defs);
+      }
+
+      const shapeFill = useGradient ? "url(#custom-overlay-gradient)" : safeFgColor;
+
       const corners = [
         { x: 0, y: 0 },
         { x: size - eyeSize, y: 0 },
@@ -639,7 +662,7 @@ export default function Generator() {
         }
         
         path.setAttribute("d", d.replace(/\s+/g," "));
-        path.setAttribute("fill", eyeColor);
+        path.setAttribute("fill", shapeFill);
         path.setAttribute("fill-rule", "evenodd");
         overlayGroup?.appendChild(path);
       });
@@ -663,7 +686,7 @@ export default function Generator() {
           default: bd = `M${bcx-br},${bcy-br} h${ballSize} v${ballSize} h-${ballSize} Z`; break;
         }
         path.setAttribute("d", bd);
-        path.setAttribute("fill", eyeColor);
+        path.setAttribute("fill", shapeFill);
         overlayGroup?.appendChild(path);
       });
 
@@ -704,7 +727,7 @@ export default function Generator() {
                 break;
             }
             path.setAttribute("d", md);
-            path.setAttribute("fill", eyeColor);
+            path.setAttribute("fill", shapeFill);
             overlayGroup?.appendChild(path);
           }
         }
@@ -1834,7 +1857,7 @@ export default function Generator() {
                     const actualSrc = solidProcessedMasks[selectedShape] || shapeDef?.src;
                     const combinedMask = (shapeDef?.isPng && actualSrc && !isSquare) ? `url("${actualSrc}")` : undefined;
 
-                    const finalQrSize = safeZone.size * 0.92 * qrScale; 
+                    const finalQrSize = safeZone.size * 0.82 * qrScale; 
 
                     const outerStyle: React.CSSProperties = {
                       maskImage: combinedMask,
