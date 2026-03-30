@@ -232,21 +232,21 @@ function PricingPreview() {
       return;
     }
     if (!user) return;
-    
+
     setIsUpgrading(planKey);
     try {
       // @ts-ignore
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
-        .update({ 
-          plan: planKey, 
-          trial_start_date: null, 
-          trial_end_date: null 
+        .update({
+          plan: planKey,
+          trial_start_date: null,
+          trial_end_date: null
         })
         .eq('id', user.id);
-        
+
       if (error) throw error;
-      
+
       await queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast.success(`Successfully upgraded to ${plans.find(p => p.id === planKey)?.name} plan!`);
       navigate('/dashboard/profile');
@@ -281,8 +281,8 @@ function PricingPreview() {
               viewport={{ once: true }}
               transition={{ duration: 0.4, ease, delay: i * 0.08 }}
               className={`rounded-xl p-6 border ${p.highlight
-                  ? "border-primary bg-background shadow-lg shadow-primary/5 relative"
-                  : "border-border bg-background"
+                ? "border-primary bg-background shadow-lg shadow-primary/5 relative"
+                : "border-border bg-background"
                 }`}
             >
               {p.highlight && (
@@ -313,8 +313,8 @@ function PricingPreview() {
                 onClick={() => handleUpgrade(p.id)}
                 disabled={isUpgrading !== null}
                 className={`w-full inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-medium btn-press transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${p.highlight
-                    ? "bg-foreground text-background hover:opacity-90"
-                    : "border border-border hover:bg-accent"
+                  ? "bg-foreground text-background hover:opacity-90"
+                  : "border border-border hover:bg-accent"
                   }`}
               >
                 {isUpgrading === p.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
