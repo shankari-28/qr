@@ -98,8 +98,8 @@ export function useScanStats(qrId?: string) {
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
 
-      // Always use the master scan_count from qr_codes for Total Scans so it matches other pages
-      const totalScans = totalScansValue;
+      // Use scan_events count if available, fall back to qr_codes.scan_count
+      const totalScans = eventCount > 0 ? eventCount : totalScansValue;
 
       return { totalScans, uniqueScans: unique, desktopPct, mobilePct, countries, browsers: [] };
 
