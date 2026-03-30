@@ -39,47 +39,37 @@ export default function Redirect() {
         // 2. Gather Environment Data
         const userAgent = navigator.userAgent;
         const isBot = /bot|crawler|spider|facebook|whatsapp|preview|link|slurp|bing|google|twitter/i.test(userAgent) || (navigator as any).webdriver;
-
+        
         if (isBot) {
           console.log("Bot detected, skipping analytics capture.");
         } else {
-          // De-duplication check for smoother testing (2s interval)
-          const lastScanTime = localStorage.getItem(`last_scan_${qrId}`);
-          const now = Date.now();
+          // 3. Capture Geography (Parallel to not block the flow)
+          let geo = { country_name: "Unknown", region: "Unknown", city: "Unknown", ip: "Unknown" };
+          try {
+            const geoRes = await fetch("https://ipapi.co/json/");
+            if (geoRes.ok) {
+              geo = await geoRes.json();
+              setGeoInfo(geo);
+            }
+          } catch (e) { console.error("Geo-IP capture failed:", e); }
 
-          if (lastScanTime && (now - parseInt(lastScanTime)) < 2000) {
-            console.log("Repeated scan detected within 2s, skipping analytics increment.");
-          } else {
-            localStorage.setItem(`last_scan_${qrId}`, now.toString());
+          // 4. Atomic Scan Increment (Total + Unique log)
+          const deviceType = /Mobi|Android|iPhone/i.test(userAgent) ? "mobile" : "desktop";
+          const userIdentifier = `${geo.ip}-${userAgent}`; // Primary Unique ID
 
-            // 3. Capture Geography (Parallel to not block the flow)
-            let geo = { country_name: "Unknown", region: "Unknown", city: "Unknown", ip: "Unknown" };
-            try {
-              const geoRes = await fetch("https://ipapi.co/json/");
-              if (geoRes.ok) {
-                geo = await geoRes.json();
-                setGeoInfo(geo);
-              }
-            } catch (e) { console.error("Geo-IP capture failed:", e); }
+          console.log("Recording atomic scan...");
+          const { error: rpcError } = await (supabase as any).rpc('increment_scan', {
+            target_qr_id: qrId,
+            scanner_email: null,
+            device_type: deviceType,
+            country: geo.country_name,
+            state: geo.region,
+            city: geo.city,
+            ip_address: geo.ip,
+            user_identifier: userIdentifier
+          });
 
-            // 4. Atomic Scan Increment (Total + Unique log)
-            const deviceType = /Mobi|Android|iPhone/i.test(userAgent) ? "mobile" : "desktop";
-            const userIdentifier = `${geo.ip}-${userAgent}`; // Primary Unique ID
-
-            console.log("Recording atomic scan...");
-            const { error: rpcError } = await (supabase as any).rpc('increment_scan', {
-              target_qr_id: qrId,
-              scanner_email: null,
-              device_type: deviceType,
-              country: geo.country_name,
-              state: geo.region,
-              city: geo.city,
-              ip_address: geo.ip,
-              user_identifier: userIdentifier
-            });
-
-            if (rpcError) console.error("Analytics RPC Failure:", rpcError);
-          }
+          if (rpcError) console.error("Analytics RPC Failure:", rpcError);
         }
 
         // 5. Redirection Logic
@@ -104,7 +94,7 @@ export default function Redirect() {
 
   const performRedirect = (data: any) => {
     if (!data) return;
-
+    
     if (["url", "video", "app", "social"].includes(data.type)) {
       let target = data.content;
       if (!target.startsWith("http://") && !target.startsWith("https://")) {
@@ -157,7 +147,7 @@ export default function Redirect() {
       if (leadError) throw leadError;
 
       toast.success("Connection secured! Redirecting...");
-
+      
       setTimeout(() => {
         performRedirect(qrData);
       }, 800);
@@ -171,7 +161,7 @@ export default function Redirect() {
   if (showForm && qrData) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-accent/5 to-background font-sans">
-        <motion.div
+        <motion.div 
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           className="max-w-md w-full bg-card border border-border rounded-3xl p-8 shadow-2xl relative overflow-hidden"
@@ -183,7 +173,7 @@ export default function Redirect() {
             <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mb-6 mx-auto">
               <ShieldCheck className="w-10 h-10 text-primary" />
             </div>
-
+            
             <h2 className="text-2xl font-bold tracking-tight mb-2">Connect to Proceed</h2>
             <p className="text-muted-foreground text-sm mb-8 px-4">
               Please provide your contact details to safely access the QR destination.
@@ -266,7 +256,7 @@ export default function Redirect() {
           </div>
           <h2 className="text-xl font-bold text-foreground mb-4 italic">Security Intercept</h2>
           <p className="text-muted-foreground text-sm leading-relaxed mb-6">{error}</p>
-          <button
+          <button 
             onClick={() => window.location.reload()}
             className="px-6 py-2 bg-foreground text-background rounded-full text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity"
           >

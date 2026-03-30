@@ -68,17 +68,17 @@ export function useScanStats(qrId?: string) {
 
       const { data: events } = await query as unknown as { data: { id: string, device_type: string | null, country: string | null, user_identifier: string | null }[] | null };
 
-      // Total scans is the all-time global count from the QR codes themselves
-      const total = totalScansValue;
-
-      // Unique scans and breakdown stats come from the detailed scan_events log
+      // Total scans should be the count of all audit events in the result set
+      const total = events?.length ?? 0;
+      
+      // Unique scans come from the distinct user_identifiers in those events
       const unique = new Set(events?.filter(e => e.user_identifier).map(e => e.user_identifier) ?? []).size;
 
-      const eventCount = events?.length ?? 0;
+      const eventCount = total;
       const desktop = events?.filter((e) => e.device_type === "desktop").length ?? 0;
       const mobile = events?.filter((e) => e.device_type === "mobile").length ?? 0;
       const other = eventCount - desktop - mobile;
-
+      
       const desktopPct = eventCount > 0 ? Math.round(((desktop + other * 0.4) / eventCount) * 100) : 38;
       const mobilePct = eventCount > 0 ? 100 - desktopPct : 62;
 
@@ -133,7 +133,7 @@ export function useRecentScans(qrId?: string, limit = 10) {
 }
 
 export function useWeeklyScans(qrId?: string) {
-  // ... (rest remains same)
+// ... (rest remains same)
   const { user } = useAuth();
 
   return useQuery<DayScans[]>({
