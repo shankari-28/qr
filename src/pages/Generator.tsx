@@ -565,13 +565,13 @@ export default function Generator() {
     qrCodeInstance.current.update({
       data: qrValue,
       dotsOptions,
-      cornersSquareOptions: { color: "transparent", type: eyeFrameLibType },
-      cornersDotOptions: { color: "transparent", type: eyeBallLibType },
+      cornersSquareOptions: { color: safeFgColor, type: eyeFrameLibType },
+      cornersDotOptions: { color: safeFgColor, type: eyeBallLibType },
       backgroundOptions: { color: "transparent" },
       margin: 20, // Increased Quiet Zone for better scan reliability on high-density dynamic URLs
       qrOptions: { errorCorrectionLevel: safeEcLevel.charAt(0) as ErrorCorrectionLevel },
       image: safeLogo,
-      imageOptions: { margin: 10, imageSize: 0.25 } // Reduced logo size to 25% for 30% recovery headroom
+      imageOptions: { margin: 15, imageSize: 0.18 } // Standard 18% size + 30% recovery = near-perfect scannability
     });
 
     forceSvgFill();
@@ -735,7 +735,7 @@ export default function Generator() {
       }
     };
 
-    const t = setTimeout(injectCustomShapes, 50); 
+    const t = setTimeout(injectCustomShapes, 10); 
     return () => clearTimeout(t);
   }, [qrValue, fgColor, bgColor, selectedShape, ecLevel, colorMode, gradientColor1, gradientColor2, gradientAngle, bodyType, eyeFrameType, eyeBallType, limits.customization, limits.logoUpload, logoFile, base64Logo, qrRef.current, activeTemplate]);
 
@@ -1861,8 +1861,7 @@ export default function Generator() {
                     const actualSrc = solidProcessedMasks[selectedShape] || shapeDef?.src;
                     const combinedMask = (shapeDef?.isPng && actualSrc && !isSquare) ? `url("${actualSrc}")` : undefined;
 
-                    const finalQrSize = safeZone.size * 0.82 * qrScale; 
-
+                    const finalQrSize = safeZone.size * 0.72 * qrScale; // Increased gap safety from 0.82 to 0.72
                     const outerStyle: React.CSSProperties = {
                       maskImage: combinedMask,
                       maskSize: '100% 100%',
