@@ -69,12 +69,18 @@ export function useScanStats(qrId?: string) {
       const { data: events } = await query as unknown as { data: { id: string, device_type: string | null, country: string | null, user_identifier: string | null }[] | null };
 
       // Total scans should be the count of all audit events in the result set
-      const total = events?.length ?? 0;
+      // This is the most high-fidelity method to avoid double-counting.
+      const logTotal = events?.length ?? 0;
       
       // Unique scans come from the distinct user_identifiers in those events
       const unique = new Set(events?.filter(e => e.user_identifier).map(e => e.user_identifier) ?? []).size;
 
-      const eventCount = total;
+      // Decide which total to show: 
+      // If we have a log, it is the most accurate for the current view.
+      // We only fall back to the atomic counter if the log is empty but the main counter says otherwise.
+      const finalTotal = logTotal > 0 ? logTotal : (totalScansValue > 0 ? totalScansValue : 0);
+
+      const eventCount = logTotal;
       const desktop = events?.filter((e) => e.device_type === "desktop").length ?? 0;
       const mobile = events?.filter((e) => e.device_type === "mobile").length ?? 0;
       const other = eventCount - desktop - mobile;
@@ -94,7 +100,7 @@ export function useScanStats(qrId?: string) {
         .slice(0, 5);
 
       return { 
-        totalScans: totalScansValue, // Atomic Total (All hits)
+        totalScans: finalTotal,       // Source of Truth: Log count
         uniqueScans: unique,          // Distinct visitors
         desktopPct, 
         mobilePct, 

@@ -47,8 +47,8 @@ export default function Analytics() {
   const isPremiumOrFull = limits.analytics === "premium" || limits.analytics === "full";
 
   const overviewStats = [
-    { label: "Total Scans", value: (stats?.totalScans ?? 0).toLocaleString(), icon: Scan, subLabel: "All Hits" },
-    { label: "Unique Scans", value: (stats?.uniqueScans ?? 0).toLocaleString(), icon: Users, subLabel: "People" },
+    { label: "Total Hits", value: (stats?.totalScans ?? 0).toLocaleString(), icon: Scan, subLabel: "Total Loads" },
+    { label: "Unique Visitors", value: (stats?.uniqueScans ?? 0).toLocaleString(), icon: Users, subLabel: "Unique People" },
     { label: "Desktop", value: `${stats?.desktopPct ?? 38}%`, icon: Monitor },
     { label: "Mobile", value: `${stats?.mobilePct ?? 62}%`, icon: Smartphone },
     { label: "Lead Conversions", value: leads.length.toLocaleString(), icon: Users },
